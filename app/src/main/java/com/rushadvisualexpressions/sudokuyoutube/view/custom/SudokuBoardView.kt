@@ -1,14 +1,12 @@
 package com.rushadvisualexpressions.sudokuyoutube.view.custom
 
 import android.content.Context
-import android.graphics.Canvas
-import android.graphics.Color
-import android.graphics.Paint
-import android.graphics.Rect
+import android.graphics.*
 import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
 import com.rushadvisualexpressions.sudokuyoutube.game.Cell
+import kotlin.math.min
 
 class SudokuBoardView(context: Context, attributeSet: AttributeSet) : View(context, attributeSet){
 
@@ -35,24 +33,36 @@ class SudokuBoardView(context: Context, attributeSet: AttributeSet) : View(conte
 
     private val selectedCellPaint = Paint().apply {
         style = Paint.Style.FILL_AND_STROKE
-        color = Color.parseColor("#C8C8C8")
+        color = Color.parseColor("#808080")
     }
 
     private val conflictingCellPaint = Paint().apply {
         style = Paint.Style.FILL_AND_STROKE
-        color = Color.parseColor("#DADADA")
+        color = Color.parseColor("#A0A0A0")
     }
 
     private val textPaint = Paint().apply {
         style = Paint.Style.FILL_AND_STROKE
         color = Color.BLACK
-        textSize = 48F
+        textSize = 44F
+    }
+
+    private val startingCellTextPaint = Paint().apply {
+        style = Paint.Style.FILL_AND_STROKE
+        color = Color.BLACK
+        textSize = 60F
+        typeface = Typeface.DEFAULT_BOLD
+    }
+
+    private val startingCellPaint = Paint().apply {
+        style = Paint.Style.FILL_AND_STROKE
+        color = Color.parseColor("#C0C0C0")
     }
 
     //
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
-        val sizeInPixels = Math.min(widthMeasureSpec, heightMeasureSpec);
+        val sizeInPixels = min(widthMeasureSpec, heightMeasureSpec);
         setMeasuredDimension(sizeInPixels, sizeInPixels);
     }
 
@@ -80,25 +90,13 @@ class SudokuBoardView(context: Context, attributeSet: AttributeSet) : View(conte
     }
 
     private fun fillCells(canvas: Canvas) {
-        /*
-        if ( selectedRow == -1 || selectedCol == -1) return
-        for (r in 0..size) {
-            for (c in 0..size) {
-                if (r == selectedRow && c == selectedCol) {
-                    fillCell(canvas, r, c, selectedCellPaint)
-                } else if (r == selectedRow || c == selectedCol) {
-                    fillCell(canvas, r, c, conflictingCellPaint)
-                } else if (r / sqrtSize == selectedRow / sqrtSize && c / sqrtSize == selectedCol / sqrtSize) {
-                    fillCell(canvas, r, c, conflictingCellPaint)
-                }
-            }
-        }
-        */
         cells?.forEach {
             val r = it.row
             var c = it.col
 
-            if (r == selectedRow && c == selectedCol) {
+            if ( it.isStartingCell ) {
+                fillCell(canvas, r, c, startingCellPaint)
+            } else if (r == selectedRow && c == selectedCol) {
                 fillCell(canvas, r, c, selectedCellPaint)
             } else if (r == selectedRow || c == selectedCol) {
                 fillCell(canvas, r, c, conflictingCellPaint)
@@ -141,11 +139,12 @@ class SudokuBoardView(context: Context, attributeSet: AttributeSet) : View(conte
             val col = it.col
             val valueString = it.value.toString()
             val textBounds = Rect()
-            textPaint.getTextBounds(valueString, 0,valueString.length, textBounds)
-            val textWidth = textPaint.measureText(valueString)
+            val paintToUse = if ( it.isStartingCell ) startingCellTextPaint  else textPaint
+            paintToUse.getTextBounds(valueString, 0,valueString.length, textBounds)
+            val textWidth =  paintToUse.measureText(valueString)
             val textHeight = textBounds.height()
             canvas.drawText(valueString, (col * cellSizePixels) +((cellSizePixels - textWidth) / 2),
-                (row * cellSizePixels) +((cellSizePixels - textHeight) / 2), textPaint)
+                (row * cellSizePixels) +((cellSizePixels - textHeight) / 2),  paintToUse)
         }
     }
 
